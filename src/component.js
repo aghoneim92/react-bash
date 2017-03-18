@@ -1,62 +1,62 @@
-import React, { Component, PropTypes } from 'react';
-import * as BaseCommands from './commands';
-import Bash from './bash';
-import Styles from './styles';
+import React, { Component, PropTypes } from 'react'
+import * as BaseCommands from './commands'
+import Bash from './bash'
+import Styles from './styles'
 
-const CTRL_CHAR_CODE = 17;
-const L_CHAR_CODE = 76;
-const C_CHAR_CODE = 67;
-const UP_CHAR_CODE = 38;
-const DOWN_CHAR_CODE = 40;
-const TAB_CHAR_CODE = 9;
-const noop = () => {};
+const CTRL_CHAR_CODE = 17
+const L_CHAR_CODE = 76
+const C_CHAR_CODE = 67
+const UP_CHAR_CODE = 38
+const DOWN_CHAR_CODE = 40
+const TAB_CHAR_CODE = 9
+const noop = () => {}
 
 export default class Terminal extends Component {
 
     constructor({ history, structure, extensions, prefix }) {
-        super();
-        this.Bash = new Bash(extensions);
-        this.ctrlPressed = false;
+        super()
+        this.Bash = new Bash(extensions)
+        this.ctrlPressed = false
         this.state = {
             settings: { user: { username: prefix.split('@')[1] } },
             history: history.slice(),
             structure: Object.assign({}, structure),
             cwd: '',
-        };
-        this.handleKeyDown = this.handleKeyDown.bind(this);
-        this.handleKeyUp = this.handleKeyUp.bind(this);
+        }
+        this.handleKeyDown = this.handleKeyDown.bind(this)
+        this.handleKeyUp = this.handleKeyUp.bind(this)
     }
 
     componentDidMount() {
-        this.refs.input.focus();
+        this.refs.input.focus()
     }
 
     componentWillReceiveProps({ extensions, structure, history }) {
-        const updatedState = {};
+        const updatedState = {}
         if (structure) {
-            updatedState.structure = Object.assign({}, structure);
+            updatedState.structure = Object.assign({}, structure)
         }
         if (history) {
-            updatedState.history = history.slice();
+            updatedState.history = history.slice()
         }
         if (extensions) {
-            this.Bash.commands = Object.assign({}, extensions, BaseCommands);
+            this.Bash.commands = Object.assign({}, extensions, BaseCommands)
         }
-        this.setState(updatedState);
+        this.setState(updatedState)
     }
 
     /*
      * Utilize immutability
      */
     shouldComponentUpdate(nextProps, nextState) {
-        return (this.state !== nextState) || (this.props !== nextProps);
+        return (this.state !== nextState) || (this.props !== nextProps)
     }
 
     /*
      * Keep input in view on change
      */
     componentDidUpdate() {
-        this.refs.input.scrollIntoView();
+        this.refs.input.scrollIntoView()
     }
 
     /*
@@ -64,10 +64,10 @@ export default class Terminal extends Component {
      * update the input.
      */
     attemptAutocomplete() {
-        const input = this.refs.input.value;
-        const suggestion = this.Bash.autocomplete(input, this.state);
+        const input = this.refs.input.value
+        const suggestion = this.Bash.autocomplete(input, this.state)
         if (suggestion) {
-            this.refs.input.value = suggestion;
+            this.refs.input.value = suggestion
         }
     }
 
@@ -78,11 +78,11 @@ export default class Terminal extends Component {
      */
     handleKeyDown(evt) {
         if (evt.which === CTRL_CHAR_CODE) {
-            this.ctrlPressed = true;
+            this.ctrlPressed = true
         } else if (evt.which === TAB_CHAR_CODE) {
             // Tab must be on keydown to prevent default
-            this.attemptAutocomplete();
-            evt.preventDefault();
+            this.attemptAutocomplete()
+            evt.preventDefault()
         }
     }
 
@@ -100,50 +100,50 @@ export default class Terminal extends Component {
     handleKeyUp(evt) {
         if (evt.which === L_CHAR_CODE) {
             if (this.ctrlPressed) {
-                this.setState(this.Bash.execute('clear', this.state));
+                this.setState(this.Bash.execute('clear', this.state))
             }
         } else if (evt.which === C_CHAR_CODE) {
             if (this.ctrlPressed) {
-                this.refs.input.value = '';
+                this.refs.input.value = ''
             }
         } else if (evt.which === UP_CHAR_CODE) {
             if (this.Bash.hasPrevCommand()) {
-                this.refs.input.value = this.Bash.getPrevCommand();
+                this.refs.input.value = this.Bash.getPrevCommand()
             }
         } else if (evt.which === DOWN_CHAR_CODE) {
             if (this.Bash.hasNextCommand()) {
-                this.refs.input.value = this.Bash.getNextCommand();
+                this.refs.input.value = this.Bash.getNextCommand()
             } else {
-                this.refs.input.value = '';
+                this.refs.input.value = ''
             }
         } else if (evt.which === CTRL_CHAR_CODE) {
-            this.ctrlPressed = false;
+            this.ctrlPressed = false
         }
     }
 
     handleSubmit(evt) {
-        evt.preventDefault();
+        evt.preventDefault()
 
         // Execute command
-        const input = evt.target[0].value;
-        const newState = this.Bash.execute(input, this.state);
-        this.setState(newState);
-        this.refs.input.value = '';
+        const input = evt.target[0].value
+        const newState = this.Bash.execute(input, this.state)
+        this.setState(newState)
+        this.refs.input.value = ''
     }
 
     renderHistoryItem(style) {
         return (item, key) => {
             const prefix = item.hasOwnProperty('cwd') ? (
                 <span style={style.prefix}>{`${this.props.prefix} ~${item.cwd} $`}</span>
-            ) : undefined;
-            return <div data-test-id={`history-${key}`} key={key} >{prefix}{item.value}</div>;
-        };
+            ) : undefined
+            return <div data-test-id={`history-${key}`} key={key} >{prefix}{item.value}</div>
+        }
     }
 
     render() {
-        const { onClose, onExpand, onMinimize, prefix, theme } = this.props;
-        const { history, cwd } = this.state;
-        const style = Styles[theme] || Styles.light;
+        const { onClose, onExpand, onMinimize, prefix, styles, theme } = this.props
+        const { history, cwd } = this.state
+        const style = Object.assign({}, Styles[theme] || Styles.light, styles)
         return (
             <div className="ReactBash" style={style.ReactBash}>
                 <div style={style.header}>
@@ -165,14 +165,14 @@ export default class Terminal extends Component {
                     </form>
                 </div>
             </div>
-        );
+        )
     }
 }
 
 Terminal.Themes = {
     LIGHT: 'light',
     DARK: 'dark',
-};
+}
 
 Terminal.propTypes = {
     extensions: PropTypes.object,
@@ -182,8 +182,9 @@ Terminal.propTypes = {
     onMinimize: PropTypes.func,
     prefix: PropTypes.string,
     structure: PropTypes.object,
+    styles: PropTypes.object,
     theme: PropTypes.string,
-};
+}
 
 Terminal.defaultProps = {
     extensions: {},
@@ -193,5 +194,6 @@ Terminal.defaultProps = {
     onMinimize: noop,
     prefix: 'hacker@default',
     structure: {},
+    styles: {},
     theme: Terminal.Themes.LIGHT,
-};
+}
